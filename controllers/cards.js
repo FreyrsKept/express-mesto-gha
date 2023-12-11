@@ -90,7 +90,7 @@ function dislikeCard(req, res) {
 const deleteCard = (req, res) => {
   const { cardId } = req.params;
 
-  return Cards.findByIdAndRemove(cardId)
+  return Card.findByIdAndRemove(cardId)
     .orFail(() => new Error('NotFound'))
     .then((card) => res.status(200).send(card))
     .catch((err) => {
