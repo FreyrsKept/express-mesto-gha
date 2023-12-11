@@ -1,3 +1,4 @@
+const card = require('../models/card');
 const Card = require('../models/card');
 
 const {
@@ -87,39 +88,22 @@ function dislikeCard(req, res) {
     });
 }
 
-const deleteCard = (req, res) => {
-  const { cardId } = req.params;
+function deleteCard(req, res) {
+  const { id } = req.params;
 
-  return Card.findByIdAndRemove(cardId)
-    .orFail(() => new Error('NotFound'))
-    .then((card) => res.status(200).send(card))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные' });
-      } else if (err.message === 'NotFound') {
-        res.status(ERROR_NOT_FOUND).send({ message: 'Карточка с указанным _id не найдена' });
-      } else {
-        res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' });
-      }
-    });
-};
+  Card
+    .findByIdAndDelete(id)
+    .then((card) => {
+      if (card) return res.send({ data: card });
 
-// function deleteCard(req, res) {
-//   const { id } = req.params;
-
-//   Card
-//     .findByIdAndRemove(id)
-//     .then((card) => {
-//       if (card) return res.send({ data: card });
-
-//       return res.status(ERROR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
-//     })
-//     .catch((err) => (
-//       err.name === 'CastError'
-//         ? res.status(ERROR_INACCURATE_DATA).send({ message: 'Передан некорректный id' })
-//         : res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' })
-//     ));
-// }
+      return res.status(ERROR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
+    })
+    .catch((err) => (
+      err.name === 'CastError'
+        ? res.status(ERROR_INACCURATE_DATA).send({ message: 'Передан некорректный id' })
+        : res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' })
+    ));
+}
 
 module.exports = {
   getCards,
