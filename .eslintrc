@@ -6,7 +6,8 @@
   },
   "extends": [
     "eslint:recommended",
-    "airbnb-base"
+    "airbnb-base",
+    "plugin:import/recommended"
   ],
   "overrides": [],
   "parserOptions": {
