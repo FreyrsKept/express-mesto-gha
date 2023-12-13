@@ -6,14 +6,18 @@ const userSchema = new Schema({
   name: {
     type: String,
     required: true,
-    minlength: 2,
-    maxlength: 30,
+    validate: {
+      validator: ({ length }) => length >= 2 && length <= 30,
+      message: 'Имя пользователя должно быть длиной от 2 до 30 символов',
+    },
   },
   about: {
     type: String,
     required: true,
-    minlength: 2,
-    maxlength: 30,
+    validate: {
+      validator: ({ length }) => length >= 2 && length <= 30,
+      message: 'Информация о пользователе должна быть длиной от 2 до 30 символов',
+    },
   },
   avatar: {
     type: String,
