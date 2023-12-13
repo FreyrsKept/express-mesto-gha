@@ -65,7 +65,7 @@ function setUserInfo(req, res) {
       return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь по указанному id не найден' });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
+      if (err.name === 'CastError') {
         return res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при обновлении профиля' });
       }
 
@@ -94,7 +94,7 @@ function setUserAvatar(req, res) {
       return res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь по указанному id не найден' });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
+      if (err.name === 'CastError') {
         return res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при обновлении аватара' });
       }
 

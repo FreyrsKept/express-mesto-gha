@@ -50,7 +50,7 @@ function likeCard(req, res) {
       return res.status(ERROR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
+      if (err.name === 'CastError') {
         return res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные для добавления лайка' });
       }
 
@@ -80,7 +80,7 @@ function dislikeCard(req, res) {
       return res.status(ERROR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
+      if (err.name === 'CastError') {
         return res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные для снятия лайка' });
       }
 
