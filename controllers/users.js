@@ -1,4 +1,6 @@
 const User = require('../models/user');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const {
   ERROR_INACCURATE_DATA,
@@ -6,12 +8,15 @@ const {
   ERROR_INTERNAL_SERVER,
 } = require('../utils/errors');
 
-function createUser(req, res) {
-  const { name, about, avatar } = req.body;
-
-  User
-    .create({ name, about, avatar })
-    .then((user) => res.send({ data: user }))
+function createUser(req, res, next) {
+  const { name, about, avatar, email } = req.body;
+  bcrypt.hash(req.body.password, 10)
+    .then((hash) => {
+      user.create({
+        name, about, avatar, email, password: hash,
+      });
+    })
+    .then((user) => res.status(201).send(user))
     .catch((err) => (
       err.name === 'ValidationError'
         ? res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при создании пользователя' })
@@ -102,10 +107,39 @@ function setUserAvatar(req, res) {
     });
 }
 
+function login(req, res, next) {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, 'yandex-praktikum', { expiresIn: '7d' });
+      res.send({ token });
+    })
+    .catch(next);
+}
+
+function getCurrentUser(req, res, next) {
+  User.findById(req.user._id)
+    .orFail(() => {
+      throw new ERROR_NOT_FOUND('Пользователь не найден');
+    })
+    .then((user) => res.status(200).send({ user }))
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        throw new BadRequest('Переданы некорректные данные');
+      } else if (err.message === 'NotFound') {
+        throw new NotFound('Пользователь не найден');
+      }
+    })
+    .catch(next);
+};
+
 module.exports = {
   createUser,
   getUsersInfo,
   getUserInfo,
   setUserInfo,
   setUserAvatar,
+  login,
+  getCurrentUser,
 };

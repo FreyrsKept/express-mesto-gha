@@ -1,10 +1,10 @@
-const card = require('../models/card');
 const Card = require('../models/card');
 
 const {
   ERROR_INACCURATE_DATA,
   ERROR_NOT_FOUND,
   ERROR_INTERNAL_SERVER,
+  ERROR_FORBIDDEN_ERROR,
 } = require('../utils/errors');
 
 function getCards(req, res) {
@@ -95,6 +95,9 @@ function deleteCard(req, res) {
     .findByIdAndDelete(id)
     .then((card) => {
       if (card) return res.send({ data: card });
+
+      const { owner: cardOwnerId } = card;
+      if (cardOwnerId.valueOf() !== userId) throw new ERROR_FORBIDDEN_ERROR('Нет прав доступа');
 
       return res.status(ERROR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
     })
