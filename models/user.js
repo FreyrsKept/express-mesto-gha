@@ -62,11 +62,9 @@ const userSchema = new Schema({
             return bcrypt.compare(password, user.password)
               .then((matched) => {
                 if (matched) return user;
-
                 return Promise.reject();
               });
           }
-
           return Promise.reject();
         });
     },

@@ -46,14 +46,12 @@ function likeCard(req, res) {
     )
     .then((card) => {
       if (card) return res.send({ data: card });
-
       return res.status(ERROR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные для добавления лайка' });
       }
-
       return res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' });
     });
 }
@@ -76,14 +74,12 @@ function dislikeCard(req, res) {
     )
     .then((card) => {
       if (card) return res.send({ data: card });
-
       return res.status(ERROR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
         return res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные для снятия лайка' });
       }
-
       return res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' });
     });
 }
@@ -95,10 +91,8 @@ function deleteCard(req, res) {
     .findByIdAndDelete(id)
     .then((card) => {
       if (card) return res.send({ data: card });
-
       const { owner: cardOwnerId } = card;
       if (cardOwnerId.valueOf() !== userId) throw new ERROR_FORBIDDEN_ERROR('Нет прав доступа');
-
       return res.status(ERROR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
     })
     .catch((err) => (
