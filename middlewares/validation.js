@@ -7,7 +7,7 @@ const validationUrl = (url) => {
     return url;
   }
   throw new BadRequest('Некорректный адрес URL');
-}
+};
 
 const validationLogin = celebrate({
   body: Joi.object().keys({
