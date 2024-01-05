@@ -3,27 +3,37 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const {
-  ERROR_INACCURATE_DATA,
   ERROR_NOT_FOUND,
   ERROR_INTERNAL_SERVER,
 } = require('../utils/errors');
+const ERROR_INACCURATE_DATA = require('../utils/errors');
 
 const AuthError = require('../errors/autherror');
 
 function createUser(req, res, next) {
-  const { name, about, avatar, email } = req.body;
-  bcrypt.hash(req.body.password, 10)
-    .then((hash) => {
-      user.create({
-        name, about, avatar, email, password: hash,
+  const {
+    email, password, name, about, avatar,
+  } = req.body;
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      email, password: hash, name, about, avatar,
+    }
+    ))
+    .then((user) => {
+      const { _id } = user;
+      return res.status(201).send({
+        email, name, about, avatar, _id,
       });
     })
-    .then((user) => res.status(201).send(user))
-    .catch((err) => (
-      err.name === 'ValidationError'
-        ? res.status(ERROR_INACCURATE_DATA).send({ message: 'Переданы некорректные данные при создании пользователя' })
-        : res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' })
-    ));
+    .catch((err) => {
+      if (err.code === 11000) {
+        next(new AuthError('Пользователь с таким электронным адресом уже зарегистрирован'));
+      } else if (err.name === 'ValidationError') {
+        next(new ERROR_INACCURATE_DATA('Переданы некорректные данные при регистрации пользователя'));
+      } else {
+        next(err);
+      }
+    });
 }
 
 function getUsersInfo(req, res) {
