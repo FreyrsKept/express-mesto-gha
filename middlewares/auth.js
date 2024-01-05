@@ -1,11 +1,11 @@
 const jwt = require('jsonwebtoken');
 const AuthError = require('../errors/autherror');
 
-module.exports = (req, res, next) => {
+module.exports = (req, _, next) => {
   const { autorization } = req.headers;
 
   if (!autorization || !autorization.startsWith('Bearer ')) {
-    throw new AuthError('Необходима авторизация');
+    return next(AuthError('Необходима авторизация'));
   }
 
   const token = autorization.replace('Bearer ', '');
@@ -14,9 +14,10 @@ module.exports = (req, res, next) => {
   try {
     payload = jwt.verify(token, 'yandex-prakticum');
   } catch (err) {
-    throw new AuthError('Необходима авторизация');
+    return next(AuthError('Необходима авторизация'));
   }
 
   req.user = payload;
-  next();
+
+  return next();
 };

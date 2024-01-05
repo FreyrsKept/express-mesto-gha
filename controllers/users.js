@@ -8,6 +8,8 @@ const {
   ERROR_INTERNAL_SERVER,
 } = require('../utils/errors');
 
+const AuthError = require('../errors/autherror');
+
 function createUser(req, res, next) {
   const { name, about, avatar, email } = req.body;
   bcrypt.hash(req.body.password, 10)
@@ -107,7 +109,7 @@ function setUserAvatar(req, res) {
     });
 }
 
-function login(req, res, next) {
+function loginUser(req, res, next) {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -140,6 +142,6 @@ module.exports = {
   getUserInfo,
   setUserInfo,
   setUserAvatar,
-  login,
+  loginUser,
   getCurrentUser,
 };

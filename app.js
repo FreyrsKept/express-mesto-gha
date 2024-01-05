@@ -6,7 +6,7 @@ const { errors } = require('celebrate');
 const handelError = require('./middlewares/handelError');
 const bodyParser = require('body-parser');
 const { ERROR_NOT_FOUND } = require('./utils/errors');
-const { createUser, login } = require('./controllers/users');
+const { createUser, loginUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -23,7 +23,7 @@ app.use(auth);
 app.use(errors());
 app.use(handelError);
 app.post('/signup', createUser);
-app.post('/signin', login);
+app.post('/signin', loginUser);
 
 app.use((req, res) => {
   res.status(ERROR_NOT_FOUND).send({ message: 'Страницы по запрошенному URL не существует' });
