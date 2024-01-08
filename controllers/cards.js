@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Card = require('../models/card');
 const NotFound = require('../errors/notFound');
-const BadRequest = require('../errors/badRequest');
+const BadRequest = require('../errors/BadRequest');
 const NotOwner = require('../errors/notOwner');
 const { OK_STATUS, OK_CREATED_STATUS } = require('../config/config');
 
