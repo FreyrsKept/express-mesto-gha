@@ -1,10 +1,10 @@
 const { UNAUTHORIZED_STATUS } = require('../config/config');
 
-class AuthError extends Error {
+class UnauthorizedError extends Error {
   constructor(message) {
     super(message);
     this.statusCode = UNAUTHORIZED_STATUS;
   }
 }
 
-module.exports = AuthError;
+module.exports = UnauthorizedError;
