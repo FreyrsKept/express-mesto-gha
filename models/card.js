@@ -1,19 +1,21 @@
 const mongoose = require('mongoose');
-const isUrl = require('validator/lib/isURL');
+const { REG_URL } = require('../config/config');
 
 const cardSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
-    minlength: 2,
-    maxlength: 30,
+    required: [true, 'Название должно быть заполнено'],
+    minlength: [2, 'Название не может быть короче 2 символов'],
+    maxlength: [30, 'Название не может быть длиннее 30 символов'],
   },
   link: {
     type: String,
-    required: true,
+    required: [true, 'Ссылка на картинку должна быть заполнена'],
     validate: {
-      validator: (url) => isUrl(url),
-      message: 'Некорректный адрес URL',
+      validator(url) {
+        return REG_URL.test(url);
+      },
+      message: 'Неверно указан URL изображения',
     },
   },
   owner: {

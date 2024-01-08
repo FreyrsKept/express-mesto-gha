@@ -1,108 +1,42 @@
+const mongoose = require('mongoose');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const bcrypt = require('bcryptjs');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const NotFound = require('../errors/NotFoundError');
-const BadRequest = require('../errors/BadRequest');
-const ConflictError = require('../errors/ConflictError');
+const NotFound = require('../errors/notFound');
+const BadRequest = require('../errors/badRequest');
+const ConflictError = require('../errors/conflict');
+const {
+  OK_STATUS,
+  OK_CREATED_STATUS,
+  SALT_ROUND,
+  SECRET_KEY,
+} = require('../config/config');
 
 const getUsers = (req, res, next) => {
-  User.find({})
-    .then((users) => res.status(200).send(users))
+  User.find()
+    .then((users) => {
+      res.status(OK_STATUS).send({ data: users });
+    })
     .catch(next);
 };
 
 const getUser = (req, res, next) => {
   const { userId } = req.params;
-
-  return User.findById(userId)
+  User.findById(userId)
     .orFail(() => {
-      throw new NotFound('Пользователь по указанному _id не найден');
+      throw new NotFound('Пользователь с таким id не найден');
     })
-    .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new BadRequest('Переданы некорректные данные'));
+    .then((user) => {
+      res.status(OK_STATUS).send({ data: user });
+    })
+    .catch((e) => {
+      if (e instanceof mongoose.Error.CastError) {
+        return next(new BadRequest('Переданы некорректные данные о пользователе'));
       }
-      if (err.message === 'NotFound') {
-        next(new NotFound('Пользователь по указанному _id не найден'));
-      }
-      next(err);
+      return next(e);
     });
-};
-
-const createUser = (req, res, next) => {
-  const {
-    name, about, avatar, email,
-  } = req.body;
-  bcrypt.hash(req.body.password, 10)
-    .then((hash) => {
-      User.create({
-        name, about, avatar, email, password: hash,
-      });
-    })
-    .then((user) => res.status(201).send(user))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        throw new BadRequest('Переданы некорректные данные при создании пользователя');
-      } else if (err.code === 11000) {
-        throw new ConflictError('Пользователь с таким email уже существует');
-      }
-    })
-    .catch(next);
-};
-
-const updateUser = (req, res, next) => {
-  const { name, about } = req.body;
-
-  return User.findByIdAndUpdate(
-    req.user._id,
-    { name, about },
-    { new: true, runValidators: true },
-  ).orFail(() => {
-    throw new NotFound('Пользователь с указанным _id не найден');
-  })
-    .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
-        throw new BadRequest('Переданы некорректные данные при обновлении профиля');
-      }
-    })
-    .catch(next);
-};
-
-const updateAvatar = (req, res, next) => {
-  const { avatar } = req.body;
-
-  return User.findByIdAndUpdate(
-    req.user._id,
-    { avatar },
-    { new: true, runValidators: true },
-  ).orFail(() => {
-    throw new NotFound('Пользователь с указанным _id не найден');
-  })
-    .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
-        throw new BadRequest('Переданы некорректные данные при обновлении аватара');
-      }
-    })
-    .catch(next);
-};
-
-const getCurrentUser = (req, res, next) => {
-  User.findById(req.user._id)
-    .orFail(() => {
-      throw new NotFound('Пользователь не найден');
-    })
-    .then((user) => res.status(200).send({ user }))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        throw new BadRequest('Переданы некорректные данные');
-      } else if (err.message === 'NotFound') {
-        throw new NotFound('Пользователь не найден');
-      }
-    })
-    .catch(next);
 };
 
 const login = (req, res, next) => {
@@ -110,18 +44,99 @@ const login = (req, res, next) => {
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'yandex-praktikum', { expiresIn: '7d' });
-      res.send({ token });
+      // создадим токен
+      const token = jwt.sign({ _id: user._id }, SECRET_KEY, { expiresIn: '7d' });
+      // аутентификация успешна
+      res.status(OK_STATUS).send({ token });
     })
     .catch(next);
+};
+
+const createUser = (req, res, next) => {
+  const {
+    name,
+    about,
+    avatar,
+    email,
+    password,
+  } = req.body;
+
+  bcrypt.hash(password, SALT_ROUND)
+    .then((hash) => User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    }))
+    .then(() => {
+      res.status(OK_CREATED_STATUS).send({
+        data: {
+          name, about, avatar, email,
+        },
+      });
+    })
+    .catch((e) => {
+      if (e.code === 11000) {
+        next(new ConflictError('Этот email уже зарегистрирован'));
+      } else if (e instanceof mongoose.Error.ValidationError) {
+        const message = Object.values(e.errors)
+          .map((error) => error.message)
+          .join('; ');
+
+        next(new BadRequest(message));
+      } else {
+        next(e);
+      }
+    });
+};
+
+const getCurrentUserInfo = (req, res, next) => {
+  const userId = req.user._id;
+  User.findById(userId)
+    .orFail(() => {
+      throw new NotFound('Пользователь с таким id не найден');
+    })
+    .then((user) => {
+      res.status(OK_STATUS).send({ data: user });
+    })
+    .catch(next);
+};
+
+const updateUser = (req, res, next, newData) => {
+  User.findByIdAndUpdate(
+    req.user._id,
+    newData,
+    {
+      new: true,
+      runValidators: true,
+      upsert: false,
+    },
+  ).orFail(() => {
+    throw new NotFound('Пользователь с таким id не найден');
+  })
+    .then((user) => {
+      res.status(OK_STATUS).send({ data: user });
+    })
+    .catch(next);
+};
+
+const updateUserInfo = (req, res, next) => {
+  const { name, about } = req.body;
+  return updateUser(req, res, next, { name, about });
+};
+
+const updateUserAvatar = (req, res, next) => {
+  const { avatar } = req.body;
+  return updateUser(req, res, next, { avatar });
 };
 
 module.exports = {
   getUsers,
   getUser,
-  createUser,
-  updateUser,
-  updateAvatar,
-  getCurrentUser,
   login,
+  createUser,
+  getCurrentUserInfo,
+  updateUserInfo,
+  updateUserAvatar,
 };

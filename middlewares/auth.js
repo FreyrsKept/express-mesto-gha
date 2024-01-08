@@ -1,22 +1,31 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 const jwt = require('jsonwebtoken');
-const AuthError = require('../errors/AuthError');
+const AuthErr = require('../errors/authError');
+const { SECRET_KEY } = require('../config/config');
 
+// eslint-disable-next-line consistent-return
 module.exports = (req, res, next) => {
+  // достаём авторизационный заголовок
   const { authorization } = req.headers;
 
+  // убеждаемся, что он есть или начинается с Bearer
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    throw new AuthError('Необходима авторизация');
+    return next(new AuthErr('Необходима авторизация'));
   }
 
+  // извлечём токен
   const token = authorization.replace('Bearer ', '');
   let payload;
 
   try {
-    payload = jwt.verify(token, 'yandex-praktikum');
-  } catch (err) {
-    throw new AuthError('Необходима авторизация');
+    // попытаемся верифицировать токен
+    payload = jwt.verify(token, SECRET_KEY);
+  } catch (e) {
+    // отправим ошибку, если не получилось
+    return next(new AuthErr('Необходима авторизация'));
   }
 
-  req.user = payload;
-  next();
+  req.user = payload; // записываем пейлоуд в объект запроса
+
+  next(); // пропускаем запрос дальше
 };
