@@ -1,14 +1,12 @@
 const mongoose = require('mongoose');
+const isUrl = require('validator/lib/isURL');
 
-const { Schema } = mongoose;
-const { ObjectId } = mongoose.Schema.Types;
-
-const cardSchema = new Schema({
+const cardSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Название должно быть заполнено'],
-    minlength: [2, 'Название не может быть короче 2 символов'],
-    maxlength: [30, 'Название не может быть длиннее 30 символов'],
+    required: true,
+    minlength: 2,
+    maxlength: 30,
   },
   link: {
     type: String,
@@ -19,12 +17,12 @@ const cardSchema = new Schema({
     },
   },
   owner: {
-    type: ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'user',
     required: true,
   },
   likes: [{
-    type: ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'user',
     default: [],
   }],
@@ -32,8 +30,6 @@ const cardSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-}, {
-  versionKey: false,
 });
 
 module.exports = mongoose.model('card', cardSchema);
