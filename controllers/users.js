@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const bcrypt = require('bcryptjs');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFound = require('../errors/notFound');
@@ -44,9 +42,7 @@ const login = (req, res, next) => {
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      // создадим токен
       const token = jwt.sign({ _id: user._id }, SECRET_KEY, { expiresIn: '7d' });
-      // аутентификация успешна
       res.status(OK_STATUS).send({ token });
     })
     .catch(next);
@@ -83,7 +79,6 @@ const createUser = (req, res, next) => {
         const message = Object.values(e.errors)
           .map((error) => error.message)
           .join('; ');
-
         next(new BadRequest(message));
       } else {
         next(e);

@@ -25,7 +25,6 @@ const createCard = (req, res, next) => {
         const message = Object.values(e.errors)
           .map((error) => error.message)
           .join('; ');
-
         next(new BadRequest(message));
       } else {
         next(e);
@@ -84,12 +83,12 @@ const updateCardLike = (req, res, next, newData) => {
 };
 
 const setLike = (req, res, next) => {
-  const newLike = { $addToSet: { likes: req.user._id } }; // добавить _id в массив, если его там нет
+  const newLike = { $addToSet: { likes: req.user._id } };
   return updateCardLike(req, res, next, newLike);
 };
 
 const removeLike = (req, res, next) => {
-  const likeToRemove = { $pull: { likes: req.user._id } }; // убрать _id из массива
+  const likeToRemove = { $pull: { likes: req.user._id } };
   return updateCardLike(req, res, next, likeToRemove);
 };
 

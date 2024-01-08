@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 const { celebrate, Joi } = require('celebrate');
 const { REG_URL, REG_ID } = require('../config/config');
 
